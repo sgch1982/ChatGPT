@@ -1,7 +1,88 @@
 use crate::{app::window, conf::AppConf, utils};
+use enigo::{Enigo, Key, KeyboardControllable};
 use log::{error, info};
+use std::ffi::OsString;
+use std::os::windows::ffi::OsStringExt;
+use std::ptr;
+use std::thread;
+use std::time::Duration;
+use tauri::Window;
 use tauri::{utils::config::WindowUrl, window::WindowBuilder, App, GlobalShortcutManager, Manager};
+use winapi::um::winuser::{
+  CloseClipboard, EmptyClipboard, GetClipboardData, OpenClipboard, CF_UNICODETEXT,
+};
 use wry::application::accelerator::Accelerator;
+
+//模拟按键：Ctrl + V，粘贴剪贴板中的文本
+fn simulate_paste() {
+  let mut enigo = Enigo::new();
+  enigo.key_down(Key::Control);
+  enigo.key_click(Key::Layout('v'));
+  enigo.key_up(Key::Control);
+
+  // 等待按键消息处理
+  thread::sleep(Duration::from_millis(100));
+  unsafe {
+    // 清空剪贴板并关闭
+    EmptyClipboard();
+    CloseClipboard();
+  }
+}
+
+// 模拟按键：Ctrl + C，复制选定的文本到剪贴板
+fn copy_selected_text() -> Option<String> {
+  let mut enigo = Enigo::new();
+  enigo.key_down(Key::Control);
+  enigo.key_click(Key::Layout('c'));
+  enigo.key_up(Key::Control);
+
+  // // 等待按键消息处理
+  thread::sleep(Duration::from_millis(100));
+
+  unsafe {
+    // 打开剪贴板
+    if OpenClipboard(ptr::null_mut()) == 0 {
+      println!("Failed to open the clipboard.");
+      return None;
+    }
+
+    // 获取剪贴板中的文本
+    let clipboard_data = GetClipboardData(CF_UNICODETEXT);
+    if clipboard_data.is_null() {
+      println!("Failed to get clipboard data.");
+      CloseClipboard();
+      return None;
+    }
+
+    // 将剪贴板中的文本转换为 Rust 字符串
+    let text_ptr = clipboard_data as *const u16;
+    let mut text_length = 0;
+    while *text_ptr.offset(text_length) != 0 {
+      text_length += 1;
+    }
+
+    let text_slice = std::slice::from_raw_parts(text_ptr, text_length as usize);
+    let selected_text = OsString::from_wide(text_slice)
+      .to_string_lossy()
+      .into_owned();
+
+    println!("selected_text: {}", selected_text);
+
+    Some(selected_text)
+  }
+}
+
+// 聚焦输入框
+fn focus_input_textarea(window: &Window, text: &str) {
+  let script = format!(
+    r#"
+    (function() {{
+      let textarea = document.querySelector('textarea.resize-none');
+      textarea.focus();
+    }})();"#,
+  );
+  window.eval(&script).unwrap();
+}
 
 pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>> {
   info!("stepup");
@@ -24,13 +105,24 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
         let mut shortcut = app.global_shortcut_manager();
         shortcut
           .register(&v, move || {
+            // 调用获取剪贴板内容的函数
+            let selected_text = copy_selected_text().unwrap_or_else(|| "".to_string());
+            println!("Selected text: {}", selected_text);
+
             if let Some(w) = handle.get_window("core") {
-              if w.is_visible().unwrap() {
-                w.hide().unwrap();
-              } else {
-                w.show().unwrap();
-                w.set_focus().unwrap();
-              }
+              // 显示窗口并将其置于最前端
+              w.unminimize().unwrap();
+              w.show().unwrap();
+              w.set_focus().unwrap();
+
+              println!("Window is shown and focused");
+
+              focus_input_textarea(&w, &selected_text);
+              // 等待按键消息处理
+              thread::sleep(Duration::from_millis(100));
+              // 插入文本到输入框
+              simulate_paste();
+              thread::sleep(Duration::from_millis(100));
             }
           })
           .unwrap_or_else(|err| {

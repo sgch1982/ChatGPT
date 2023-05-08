@@ -4,6 +4,21 @@
   <p align="center">ChatGPT Desktop Application (Mac, Windows and Linux)</p>
 </p>
 
+## This Project Forked from [lencx/ChatGPT]
+
+## Add New Features
+
+- **Automatic Text Pasting:** ChatGPT now supports automatically pasting selected text from other applications into the input field.
+- **自动文本粘贴：** ChatGPT 现在支持自动将其他应用程序中选择的文本自动粘贴到输入框中。
+
+## How to use
+
+- 在其他应用程序或网页中选择所需的文本。
+- 使用全局热键迅速切换到 ChatGPT。
+- 所选的文本将自动粘贴到 ChatGPT 输入框中。
+
+通过这个功能，您可以轻松地将其他应用程序中的文本内容快速粘贴到 ChatGPT 输入框中，无需手动输入。享受 ChatGPT 带来的便捷体验！
+
 [![English badge](https://img.shields.io/badge/%E8%8B%B1%E6%96%87-English-blue)](./README.md)
 [![简体中文 badge](https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-Simplified%20Chinese-blue)](./README-ZH_CN.md)\
 ![visitor](https://visitor-badge.glitch.me/badge?page_id=lencx.chatgpt)

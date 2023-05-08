@@ -31,7 +31,8 @@ tauri-plugin-positioner = { git = "https://github.com/lencx/tauri-plugins-worksp
 tauri-plugin-log = { git = "https://github.com/lencx/tauri-plugins-workspace", branch = "dev", features = ["colored"] }
 tauri-plugin-autostart = { git = "https://github.com/lencx/tauri-plugins-workspace", branch = "dev" }
 tauri-plugin-window-state = { git = "https://github.com/lencx/tauri-plugins-workspace", branch = "dev" }
-
+enigo = "0.1.2"
+winapi = { version = "0.3.9", features = ["winuser","libloaderapi", "handleapi"] }
 # sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "sqlite"] }
 
 [features]
